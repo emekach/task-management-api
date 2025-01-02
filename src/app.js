@@ -4,6 +4,8 @@ const app = express();
 const path = require('path');
 const cors = require('cors');
 
+const authRouter = require('./routes/authRoutes');
+
 const globalErrorHandler = require('./middleware/errorHandler');
 
 app.use(
@@ -14,10 +16,10 @@ app.use(
 );
 
 // Parse JSON payloads with a size limit of 30MB
-app.use(express.json({ limit: '30kb' }));
+app.use(express.json({ limit: '15kb' }));
 
 // Parse URL-encoded data
-app.use(express.urlencoded({ extended: true, limit: '30kb' }));
+app.use(express.urlencoded({ extended: true, limit: '15kb' }));
 
 // serve static files
 //console.log(path.join(__dirname, '../public'));
@@ -27,6 +29,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.get('/', (req, res) => {
   res.send('Hello');
 });
+
+app.use('/api/v1/users', authRouter);
 
 app.all('*', (req, res) => {
   res.status(404).json({

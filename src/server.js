@@ -1,12 +1,13 @@
 const connectDB = require('./config/dbConn');
+const mongoose= require('mongoose');
 
-process.on('uncaughtException', () => {
-  console.log('Handling uncaught exception');
+process.on('uncaughtException', (err) => {
+  console.log('Handling uncaught exception', err.message);
   process.exit(1);
 });
 
 const app = require('./app');
-const { default: mongoose } = require('mongoose');
+
 
 connectDB();
 
