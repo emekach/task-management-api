@@ -5,6 +5,7 @@ const path = require('path');
 const cors = require('cors');
 
 const authRouter = require('./routes/authRoutes');
+const taskRouter = require('./routes/taskRoutes');
 
 const globalErrorHandler = require('./middleware/errorHandler');
 
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/v1/users', authRouter);
+app.use('/api/v1/tasks', taskRouter);
 
 app.all('*', (req, res) => {
   res.status(404).json({
