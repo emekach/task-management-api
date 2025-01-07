@@ -1,36 +1,32 @@
 const Task = require('./../models/TaskModel');
-const Task = require('./../models/TaskModel');
-const catchAsync = require('./../utils/catchAsync');
+const { catchAsync } = require('./../utils/catchAsync');
+const AppError = require('./../utils/appError');
 
 exports.createTask = catchAsync(async (req, res, next) => {
   const { title, description, dueDate, assignedTo, createdBy, tags } = req.body;
-  try {
-    const newTask = await Task.create({
-      title,
-      description,
-      dueDate,
-      assignedTo,
-      createdBy,
-      tags,
-    });
 
-    // console.log(newTask);
+  if (!title) throw new AppError(' Title field is required', 400);
 
-    res.status(200).json({
-      message: 'suceess',
-      data: { newTask },
-    });
-  } catch (err) {
-    res.status(404).json({
-      msg: 'failed',
-      data: err.message,
-    });
-  }
+  const newTask = await Task.create({
+    title,
+    description,
+    dueDate,
+    assignedTo,
+    createdBy,
+    tags,
+  });
+
+  // console.log(newTask);
+
+  res.status(200).json({
+    message: 'suceess',
+    data: { newTask },
+  });
 });
 exports.getAllTasks = catchAsync(async (req, res, next) => {
   const data = await Task.findById(req.params.id);
   if (!data) {
-    res.status(404).json({ message: 'no task found with that id' });
+    throw new AppError('No data found with that Id', 404);
   }
 
   res.status(200).json({
@@ -55,7 +51,7 @@ exports.getTask = catchAsync(async (req, res, next) => {
 exports.updateTask = catchAsync(async (req, res, next) => {
   const data = await Task.findByIdAndUpdate(req.params.id);
   if (!data) {
-    res.status(404).json({ message: 'no task found' });
+    throw new AppError('No task found with that Id', 404);
   }
 
   res.status(200).json({
@@ -69,7 +65,7 @@ exports.deleteTask = catchAsync(async (req, res, next) => {
   const data = await Task.findByIdAndDelete(req.params.id);
 
   if (!data) {
-    res.status(404).json({ message: 'no task found' });
+    throw new AppError('No Task Found with that Id', 404);
   }
 
   res.status(204).json({
