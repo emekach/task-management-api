@@ -1,8 +1,10 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
+const AppError = require('../utils/appError');
+const { catchAsync } = require('./../utils/catchAsync');
 
-exports.protect = async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next) => {
   let token;
 
   if (
@@ -13,9 +15,12 @@ exports.protect = async (req, res, next) => {
   }
 
   if (!token) {
-    return res.status(401).json({
-      status: 'failed',
-    });
+    return next(
+      new AppError(
+        'you are not authorised to access this page. Please Login',
+        401,
+      ),
+    );
   }
 
   const decoded = await promisify(jwt.verify)(
@@ -26,11 +31,14 @@ exports.protect = async (req, res, next) => {
   const currentUser = await User.findById(decoded.id);
 
   if (!currentUser) {
-    return res.status(401).json({
-      status: 'failed',
-    });
+    return next(
+      new AppError(
+        'you are not authorised to access this page. Please Login',
+        401,
+      ),
+    );
   }
 
   req.user = currentUser;
   next();
-};
+});
