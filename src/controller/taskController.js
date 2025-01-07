@@ -1,7 +1,8 @@
 const Task = require('./../models/TaskModel');
 const Task = require('./../models/TaskModel');
+const catchAsync = require('./../utils/catchAsync');
 
-exports.createTask = async (req, res) => {
+exports.createTask = catchAsync(async (req, res, next) => {
   const { title, description, dueDate, assignedTo, createdBy, tags } = req.body;
   try {
     const newTask = await Task.create({
@@ -25,8 +26,8 @@ exports.createTask = async (req, res) => {
       data: err.message,
     });
   }
-};
-exports.getAllTasks = async (req, res) => {
+});
+exports.getAllTasks = catchAsync(async (req, res, next) => {
   const data = await Task.findById(req.params.id);
   if (!data) {
     res.status(404).json({ message: 'no task found with that id' });
@@ -38,8 +39,9 @@ exports.getAllTasks = async (req, res) => {
       data,
     },
   });
-};
-exports.getTask = async (req, res) => {
+});
+
+exports.getTask = catchAsync(async (req, res, next) => {
   const data = await Task.find();
 
   res.status(200).json({
@@ -49,8 +51,8 @@ exports.getTask = async (req, res) => {
       data,
     },
   });
-};
-exports.updateTask = async (req, res) => {
+});
+exports.updateTask = catchAsync(async (req, res, next) => {
   const data = await Task.findByIdAndUpdate(req.params.id);
   if (!data) {
     res.status(404).json({ message: 'no task found' });
@@ -62,8 +64,8 @@ exports.updateTask = async (req, res) => {
       data,
     },
   });
-};
-exports.deleteTask = async (req, res) => {
+});
+exports.deleteTask = catchAsync(async (req, res, next) => {
   const data = await Task.findByIdAndDelete(req.params.id);
 
   if (!data) {
@@ -74,4 +76,4 @@ exports.deleteTask = async (req, res) => {
     status: 'success',
     data: null,
   });
-};
+});
