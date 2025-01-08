@@ -20,6 +20,8 @@ exports.createSendToken = (user, statusCode, req, res) => {
 
   res.cookie('jwt', token, cookieOptions);
 
+  user.password = undefined;
+
   res.status(statusCode).json({
     status: 'success',
     token,
