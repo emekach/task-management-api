@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const authRouter = require('./routes/authRoutes');
 const taskRouter = require('./routes/taskRoutes');
@@ -25,6 +26,8 @@ app.use(express.urlencoded({ extended: true, limit: '15kb' }));
 // serve static files
 //console.log(path.join(__dirname, '../public'));
 app.use(express.static(path.join(__dirname, '../public')));
+
+app.use(cookieParser());
 
 // routes
 app.get('/', (req, res) => {
