@@ -24,12 +24,10 @@ const taskSchema = new mongoose.Schema(
       enum: ['low', 'medium', 'high'],
       default: 'medium',
     },
-    createdBy: [
-      {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
-      },
-    ],
+    createdBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+    },
     assignedTo: {
       type: String,
     },
