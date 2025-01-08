@@ -24,9 +24,9 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Email and Password cannot be empty', 404));
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email });
 
-  if (!user || !(await user.correctPassword(password, user.password))) {
+  if (!user || !(await user.isPasswordCorrect(password))) {
     return next(new AppError('Invalid credentials', 404));
   }
 
