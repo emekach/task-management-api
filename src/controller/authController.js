@@ -1,5 +1,5 @@
 const User = require('./../models/userModel');
-const jwt = require('./../middleware/jwt');
+const jwt = require('jsonwebtoken');
 const { catchAsync } = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
@@ -93,7 +93,7 @@ exports.login = catchAsync(async (req, res, next) => {
   );
 
   const loggedInUser = await User.findById(user._id).select(
-    '-password -refreshToken',
+    '-password -refreshToken -tokenVersion',
   );
 
   if (!loggedInUser) {
@@ -119,22 +119,96 @@ exports.login = catchAsync(async (req, res, next) => {
     .status(200)
     .cookie('accessToken', accessToken, {
       ...options,
-      maxAge: process.env.JWT_EXPIRES_IN * 60 * 1000,
+      maxAge: process.env.JWT_COOKIE_EXPIRES_IN * 60 * 1000,
     })
     .cookie('refreshToken', refreshToken, {
       ...options,
-      maxAge: process.env.JWT_REFRESH_EXPIRES_IN * 24 * 60 * 60 * 1000,
+      maxAge: process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
     })
     .json({
       message: 'user logged in successful',
-      user: {
-        accessToken,
-        refreshToken,
-        loggedInUser,
-      },
+      accessToken,
+      refreshToken,
+      user: loggedInUser,
     });
 });
 
-const refreshAccessToken = catchAsync(async (req, res) => {
-  const incomingRefreshToken = '';
+exports.logoutUser = catchAsync(async (req, res, next) => {
+  if (!req.user || !req.user._id) {
+    return next(new AppError('User not found. Unable to log out.', 400));
+  }
+  console.log(req.user);
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $unset: {
+        refreshToken: '',
+      },
+      $inc: {
+        tokenVersion: 1,
+      },
+    },
+    { new: true },
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  };
+
+  return res
+    .status(200)
+    .clearCookie('accessToken', options)
+    .clearCookie('refreshToken', options)
+    .json({
+      msg: 'user logged out successfully',
+    });
+});
+
+exports.refreshAccessToken = catchAsync(async (req, res, next) => {
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    return next(new AppError('Refresh token is required', 401));
+  }
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+    );
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      return next(new AppError('Invalid refrsh Token', 401));
+    }
+    if (incomingRefreshToken !== user?.refreshToken) {
+      return next(new AppError('Invalid or expired token', 401));
+    }
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    };
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshToken(user._id);
+
+    return res
+      .status(200)
+      .cookie('accessToken', accessToken, {
+        ...options,
+        maxAge: process.env.JWT_EXPIRES_IN * 60 * 1000,
+      })
+      .cookie('refreshToken', refreshToken, {
+        ...options,
+        maxAge: process.env.JWT_REFRESH_EXPIRES_IN * 24 * 60 * 60 * 1000,
+      })
+      .json({
+        message: 'Access Token refreshed successfully',
+        accessToken,
+        refreshToken: newRefreshToken,
+      });
+  } catch (err) {
+    return next(new AppError('something went wrong generating new token', 500));
+  }
 });

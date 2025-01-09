@@ -22,15 +22,21 @@ exports.protect = catchAsync(async (req, res, next) => {
       ),
     );
   }
+  console.log(`secrest ${process.env.ACCESS_TOKEN_SECRET}`);
+  console.log(`token ${token}`);
 
   const decoded = await promisify(jwt.verify)(
     token,
     process.env.ACCESS_TOKEN_SECRET,
   );
 
-  const currentUser = await User.findById(decoded.id);
+  console.log(decoded);
 
-  if (!currentUser) {
+  const currentUser = await User.findById(decoded?._id).select(
+    '-password -refreshToken',
+  );
+
+  if (!currentUser || decoded.tokenVersion !== currentUser.tokenVersion) {
     return next(
       new AppError(
         'you are not authorised to access this page. Please Login',
@@ -38,6 +44,8 @@ exports.protect = catchAsync(async (req, res, next) => {
       ),
     );
   }
+
+  console.log(currentUser);
 
   req.user = currentUser;
   next();

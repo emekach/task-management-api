@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     refreshToken: String,
+    tokenVersion: { type: Number, default: 0 },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
@@ -57,15 +58,20 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 };
 
 userSchema.methods.generateAccessToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
+  return jwt.sign(
+    { _id: this._id, tokenVersion: this.tokenVersion },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    },
+  );
 };
 
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
+      tokenVersion: this.tokenVersion,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
