@@ -1,6 +1,7 @@
 const Task = require('./../models/TaskModel');
 const { catchAsync } = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const { isFuture } = require('date-fns');
 
 exports.createTask = catchAsync(async (req, res, next) => {
   const { title, description, dueDate, assignedTo, createdBy, tags } = req.body;
@@ -8,13 +9,18 @@ exports.createTask = catchAsync(async (req, res, next) => {
   if (!title) {
     return next(new AppError('Title field cannot be blank', 404));
   }
+  if (!dueDate || !isFuture(new Date(dueDate))) {
+    return next(new AppError('Due date must be a valid future date', 404));
+  }
+
+  console.log(req.user);
 
   const newTask = await Task.create({
     title,
     description,
-    dueDate,
+    dueDate: new Date(dueDate),
     assignedTo,
-    createdBy,
+    createdBy: req.user._id,
     tags,
   });
 

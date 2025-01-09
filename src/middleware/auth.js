@@ -22,15 +22,15 @@ exports.protect = catchAsync(async (req, res, next) => {
       ),
     );
   }
-  console.log(`secrest ${process.env.ACCESS_TOKEN_SECRET}`);
-  console.log(`token ${token}`);
+  //   console.log(`secrest ${process.env.ACCESS_TOKEN_SECRET}`);
+  //   console.log(`token ${token}`);
 
   const decoded = await promisify(jwt.verify)(
     token,
     process.env.ACCESS_TOKEN_SECRET,
   );
 
-  console.log(decoded);
+  //   console.log(decoded);
 
   const currentUser = await User.findById(decoded?._id).select(
     '-password -refreshToken',
@@ -45,7 +45,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
 
-  console.log(currentUser);
+  //   console.log(currentUser);
 
   req.user = currentUser;
   next();
