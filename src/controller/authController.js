@@ -212,3 +212,20 @@ exports.refreshAccessToken = catchAsync(async (req, res, next) => {
     return next(new AppError('something went wrong generating new token', 500));
   }
 });
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user?._id).select('+password');
+  const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordValid) {
+    return next(new AppError('Old Password is incorrect', 401));
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json({
+    message: 'Password successfully changed',
+  });
+});

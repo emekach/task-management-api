@@ -32,7 +32,8 @@ exports.createTask = catchAsync(async (req, res, next) => {
   });
 });
 exports.getAllTasks = catchAsync(async (req, res, next) => {
-  const data = await Task.findById(req.params.id);
+  const data = await Task.find({ createdBy: req.user._id });
+
   if (!data) {
     return next(new AppError('No data found with that Id', 404));
   }
@@ -46,7 +47,7 @@ exports.getAllTasks = catchAsync(async (req, res, next) => {
 });
 
 exports.getTask = catchAsync(async (req, res, next) => {
-  const data = await Task.find();
+  const data = await Task.findById(req.params.id);
 
   res.status(200).json({
     status: 'success',
