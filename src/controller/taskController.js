@@ -41,7 +41,15 @@ exports.getAllTasks = catchAsync(async (req, res, next) => {
     queryObj.tags = { $in: tags.split(',') };
   }
 
-  const data = await Task.find({ createdBy: req.user._id, ...queryObj });
+  // pagiantion
+  //page=2&limit=10
+  const pageNum = parseInt(page) || 1;
+  const limitNum = parseInt(limit) || 10;
+  const skip = (pageNum - 1) * limit;
+
+  const data = await Task.find({ createdBy: req.user._id, ...queryObj })
+    .skip(skip)
+    .limit(limitNum);
 
   if (!data) {
     return next(new AppError('No data found with that Id', 404));
@@ -50,6 +58,7 @@ exports.getAllTasks = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     result: data.length,
+    page: pageNum,
     data: {
       data,
     },
