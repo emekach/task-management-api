@@ -35,7 +35,7 @@ exports.createTask = catchAsync(async (req, res, next) => {
 exports.getAllTasks = catchAsync(async (req, res, next) => {
   // destructure the fields out of the query object
   const { page, sort, limit, fields, tags, ...queryObj } = req.query;
-  console.log(req.query, queryObj);
+  // console.log(req.query, queryObj);
 
   if (tags) {
     queryObj.tags = { $in: tags.split(',') };
@@ -45,7 +45,18 @@ exports.getAllTasks = catchAsync(async (req, res, next) => {
   //page=2&limit=10
   const pageNum = parseInt(page) || 1;
   const limitNum = parseInt(limit) || 10;
-  const skip = (pageNum - 1) * limit;
+  const skip = (pageNum - 1) * limitNum;
+
+  if (page) {
+    const numTask = await Task.countDocuments({
+      createdBy: req.user._id,
+      ...queryObj,
+    });
+    
+    if (skip > numTask) {
+      return next(new AppError('This Page does not exist', 404));
+    }
+  }
 
   const data = await Task.find({ createdBy: req.user._id, ...queryObj })
     .skip(skip)
