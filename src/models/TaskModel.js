@@ -27,12 +27,13 @@ const taskSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
+      required: true,
     },
     assignedTo: {
       type: String,
     },
     tags: {
-      type: ['String'],
+      type: [String],
       default: [],
     },
   },

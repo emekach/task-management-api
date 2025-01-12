@@ -4,7 +4,7 @@ const AppError = require('./../utils/appError');
 const { isFuture } = require('date-fns');
 
 exports.createTask = catchAsync(async (req, res, next) => {
-  const { title, description, dueDate, assignedTo, createdBy, tags } = req.body;
+  const { title, description, dueDate, priority, assignedTo, tags } = req.body;
 
   if (!title) {
     return next(new AppError('Title field cannot be blank', 404));
@@ -13,12 +13,13 @@ exports.createTask = catchAsync(async (req, res, next) => {
     return next(new AppError('Due date must be a valid future date', 404));
   }
 
-  console.log(req.user);
+  // console.log(req.user);
 
   const newTask = await Task.create({
     title,
     description,
     dueDate: new Date(dueDate),
+    priority,
     assignedTo,
     createdBy: req.user._id,
     tags,
@@ -27,12 +28,20 @@ exports.createTask = catchAsync(async (req, res, next) => {
   // console.log(newTask);
 
   res.status(200).json({
-    message: 'suceess',
+    status: 'suceess',
     data: { newTask },
   });
 });
 exports.getAllTasks = catchAsync(async (req, res, next) => {
-  const data = await Task.find({ createdBy: req.user._id });
+  // destructure the fields out of the query object
+  const { page, sort, limit, fields, tags, ...queryObj } = req.query;
+  console.log(req.query, queryObj);
+
+  if (tags) {
+    queryObj.tags = { $in: tags.split(',') };
+  }
+
+  const data = await Task.find({ createdBy: req.user._id, ...queryObj });
 
   if (!data) {
     return next(new AppError('No data found with that Id', 404));
@@ -40,6 +49,7 @@ exports.getAllTasks = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
+    result: data.length,
     data: {
       data,
     },
